@@ -1,21 +1,20 @@
 import styles from './App.module.scss';
 import { useEffect, useState } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-
+import { useDispatch } from 'react-redux';
 import { Header } from '@widgets/header';
 import Sidebar from '@widgets/sidebar';
 import { Footer } from '@widgets/footer';
+import { Spinner } from '@shared/ui';
+import { User, setUser, getProfile } from '@entities/user';
+import { NotificationModal } from '../shared/ui/popups/NotificationModal/NotificationModal';
 
-import Spinner from '@shared/ui/spinner/Spinner';
-
-import { User, setUser, selectUser, getProfile } from '@entities/user';
-
-export default function App({ check_in = false }) {
+export default function App() {
 	const [loading, setLoading] = useState(true);
+	const [notification, setNotification] = useState(true);
+
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
-	const { role } = useSelector(selectUser);
 
 	useEffect(() => {
 		getProfile()
@@ -24,31 +23,23 @@ export default function App({ check_in = false }) {
 			.finally(() => setLoading(false));
 	}, []);
 
-	useEffect(() => {
-		if (role === null) return;
-		navigate('/');
-	}, [role]);
-
 	return (
-		<div className={styles.app}>
-			<Header />
-			<Spinner isLoading={loading}>
-				<div className={styles.router_container}>
-					{check_in ? (
-						<>
+		<>
+			{!loading && notification && (
+				<NotificationModal onHide={() => setNotification(false)} />
+			)}
+			<div className={styles.container}>
+				<Header />
+				<Spinner isLoading={loading}>
+					<div className={styles.app}>
+						<Sidebar />
+						<div className={styles.page}>
 							<Outlet />
-						</>
-					) : (
-						<>
-							<Sidebar />
-							<div className={styles.page_container}>
-								<Outlet />
-							</div>
-						</>
-					)}
-				</div>
-				{!check_in && <Footer />}
-			</Spinner>
-		</div>
+						</div>
+					</div>
+					<Footer />
+				</Spinner>
+			</div>
+		</>
 	);
 }
